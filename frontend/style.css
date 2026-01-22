@@ -111,6 +111,43 @@ header h1 {
     margin-bottom: 0;
 }
 
+/* New Chat Button */
+.new-chat-btn {
+    display: block;
+    width: auto;
+    padding: 0.5rem 0;
+    margin-bottom: 1.5rem;
+    background: none;
+    border: none;
+    border-radius: 0;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    text-align: left;
+}
+
+.new-chat-btn::before {
+    content: '+';
+    display: inline-block;
+    margin-right: 0.5rem;
+    font-size: 0.75rem;
+}
+
+.new-chat-btn:hover {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+}
+
+.new-chat-btn:focus {
+    outline: none;
+    color: var(--primary-color);
+}
+
 /* Main Chat Area */
 .chat-main {
     flex: 1;
@@ -715,4 +752,55 @@ details[open] .suggested-header::before {
     .sidebar {
         width: 280px;
     }
+}
+
+/* Source citation links */
+.sources-list {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.sources-list li {
+    background: var(--background);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.sources-list li:hover {
+    border-color: var(--primary-color);
+    background: var(--surface-hover);
+}
+
+.sources-list li p {
+    margin: 0;
+}
+
+.sources-list a {
+    color: #60a5fa;
+    text-decoration: none;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    display: block;
+    word-break: break-word;
+}
+
+.sources-list a:hover {
+    color: #93c5fd;
+    text-decoration: underline;
+}
+
+.sources-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.sources-icon {
+    font-size: 0.9rem;
 }
