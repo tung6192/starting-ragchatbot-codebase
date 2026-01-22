@@ -19,7 +19,7 @@ class TestAIGeneratorGenerateResponse(unittest.TestCase):
         self.api_key = "test-api-key"
         self.model = "test-model"
 
-    @patch('ai_generator.anthropic.Anthropic')
+    @patch("ai_generator.anthropic.Anthropic")
     def test_passes_tools_to_api(self, mock_anthropic_class):
         """Tools are included in API call when provided"""
         # Arrange
@@ -42,7 +42,7 @@ class TestAIGeneratorGenerateResponse(unittest.TestCase):
         self.assertEqual(call_kwargs["tools"], tools)
         self.assertEqual(call_kwargs["tool_choice"], {"type": "auto"})
 
-    @patch('ai_generator.anthropic.Anthropic')
+    @patch("ai_generator.anthropic.Anthropic")
     def test_includes_system_prompt(self, mock_anthropic_class):
         """SYSTEM_PROMPT is included in system parameter"""
         # Arrange
@@ -64,7 +64,7 @@ class TestAIGeneratorGenerateResponse(unittest.TestCase):
         self.assertIn("system", call_kwargs)
         self.assertIn("AI assistant", call_kwargs["system"])
 
-    @patch('ai_generator.anthropic.Anthropic')
+    @patch("ai_generator.anthropic.Anthropic")
     def test_includes_conversation_history(self, mock_anthropic_class):
         """Conversation history is appended to system prompt"""
         # Arrange
@@ -87,7 +87,7 @@ class TestAIGeneratorGenerateResponse(unittest.TestCase):
         self.assertIn(history, call_kwargs["system"])
         self.assertIn("Previous conversation:", call_kwargs["system"])
 
-    @patch('ai_generator.anthropic.Anthropic')
+    @patch("ai_generator.anthropic.Anthropic")
     def test_returns_text_for_direct_response(self, mock_anthropic_class):
         """Returns text when no tool use is needed"""
         # Arrange
@@ -107,7 +107,7 @@ class TestAIGeneratorGenerateResponse(unittest.TestCase):
         # Assert
         self.assertEqual(result, "Direct answer")
 
-    @patch('ai_generator.anthropic.Anthropic')
+    @patch("ai_generator.anthropic.Anthropic")
     def test_triggers_tool_execution_on_tool_use(self, mock_anthropic_class):
         """When stop_reason='tool_use', tool execution is triggered"""
         # Arrange
@@ -130,7 +130,10 @@ class TestAIGeneratorGenerateResponse(unittest.TestCase):
         mock_final_response.stop_reason = "end_turn"
         mock_final_response.content = [Mock(text="Final answer after tool")]
 
-        mock_client.messages.create.side_effect = [mock_tool_response, mock_final_response]
+        mock_client.messages.create.side_effect = [
+            mock_tool_response,
+            mock_final_response,
+        ]
 
         generator = AIGenerator(self.api_key, self.model)
         mock_tool_manager = Mock()
@@ -139,15 +142,12 @@ class TestAIGeneratorGenerateResponse(unittest.TestCase):
 
         # Act
         result = generator.generate_response(
-            query="search for python",
-            tools=tools,
-            tool_manager=mock_tool_manager
+            query="search for python", tools=tools, tool_manager=mock_tool_manager
         )
 
         # Assert
         mock_tool_manager.execute_tool.assert_called_once_with(
-            "search_course_content",
-            query="python"
+            "search_course_content", query="python"
         )
         self.assertEqual(result, "Final answer after tool")
 
@@ -155,7 +155,7 @@ class TestAIGeneratorGenerateResponse(unittest.TestCase):
 class TestAIGeneratorHandleToolExecution(unittest.TestCase):
     """Tests for AIGenerator._handle_tool_execution() method"""
 
-    @patch('ai_generator.anthropic.Anthropic')
+    @patch("ai_generator.anthropic.Anthropic")
     def test_extracts_tool_params(self, mock_anthropic_class):
         """Correct tool name and input are extracted from response"""
         # Arrange
@@ -176,7 +176,10 @@ class TestAIGeneratorHandleToolExecution(unittest.TestCase):
         mock_final_response.stop_reason = "end_turn"
         mock_final_response.content = [Mock(text="Outline info")]
 
-        mock_client.messages.create.side_effect = [mock_tool_response, mock_final_response]
+        mock_client.messages.create.side_effect = [
+            mock_tool_response,
+            mock_final_response,
+        ]
 
         generator = AIGenerator("key", "model")
         mock_tool_manager = Mock()
@@ -186,16 +189,15 @@ class TestAIGeneratorHandleToolExecution(unittest.TestCase):
         generator.generate_response(
             query="show me MCP course outline",
             tools=[{"name": "get_course_outline"}],
-            tool_manager=mock_tool_manager
+            tool_manager=mock_tool_manager,
         )
 
         # Assert
         mock_tool_manager.execute_tool.assert_called_with(
-            "get_course_outline",
-            course_name="MCP Course"
+            "get_course_outline", course_name="MCP Course"
         )
 
-    @patch('ai_generator.anthropic.Anthropic')
+    @patch("ai_generator.anthropic.Anthropic")
     def test_passes_result_to_follow_up(self, mock_anthropic_class):
         """Tool result is included in follow-up API call messages"""
         # Arrange
@@ -216,7 +218,10 @@ class TestAIGeneratorHandleToolExecution(unittest.TestCase):
         mock_final_response.stop_reason = "end_turn"
         mock_final_response.content = [Mock(text="Final")]
 
-        mock_client.messages.create.side_effect = [mock_tool_response, mock_final_response]
+        mock_client.messages.create.side_effect = [
+            mock_tool_response,
+            mock_final_response,
+        ]
 
         generator = AIGenerator("key", "model")
         mock_tool_manager = Mock()
@@ -226,7 +231,7 @@ class TestAIGeneratorHandleToolExecution(unittest.TestCase):
         generator.generate_response(
             query="test query",
             tools=[{"name": "search_course_content"}],
-            tool_manager=mock_tool_manager
+            tool_manager=mock_tool_manager,
         )
 
         # Assert - Check the second API call
@@ -246,7 +251,7 @@ class TestAIGeneratorHandleToolExecution(unittest.TestCase):
         self.assertEqual(tool_result_msg["content"], "Search results here")
         self.assertEqual(tool_result_msg["tool_use_id"], "tool_789")
 
-    @patch('ai_generator.anthropic.Anthropic')
+    @patch("ai_generator.anthropic.Anthropic")
     def test_builds_correct_message_structure(self, mock_anthropic_class):
         """Follow-up call has proper message sequence"""
         # Arrange
@@ -267,7 +272,10 @@ class TestAIGeneratorHandleToolExecution(unittest.TestCase):
         mock_final_response.stop_reason = "end_turn"
         mock_final_response.content = [Mock(text="Done")]
 
-        mock_client.messages.create.side_effect = [mock_tool_response, mock_final_response]
+        mock_client.messages.create.side_effect = [
+            mock_tool_response,
+            mock_final_response,
+        ]
 
         generator = AIGenerator("key", "model")
         mock_tool_manager = Mock()
@@ -277,7 +285,7 @@ class TestAIGeneratorHandleToolExecution(unittest.TestCase):
         generator.generate_response(
             query="test",
             tools=[{"name": "search_course_content"}],
-            tool_manager=mock_tool_manager
+            tool_manager=mock_tool_manager,
         )
 
         # Assert - Check message structure
@@ -290,7 +298,7 @@ class TestAIGeneratorHandleToolExecution(unittest.TestCase):
         self.assertEqual(messages[1]["role"], "assistant")
         self.assertEqual(messages[2]["role"], "user")
 
-    @patch('ai_generator.anthropic.Anthropic')
+    @patch("ai_generator.anthropic.Anthropic")
     def test_returns_final_response(self, mock_anthropic_class):
         """Returns text from the second API call"""
         # Arrange
@@ -311,7 +319,10 @@ class TestAIGeneratorHandleToolExecution(unittest.TestCase):
         mock_final_response.stop_reason = "end_turn"
         mock_final_response.content = [Mock(text="This is the final answer")]
 
-        mock_client.messages.create.side_effect = [mock_tool_response, mock_final_response]
+        mock_client.messages.create.side_effect = [
+            mock_tool_response,
+            mock_final_response,
+        ]
 
         generator = AIGenerator("key", "model")
         mock_tool_manager = Mock()
@@ -321,7 +332,7 @@ class TestAIGeneratorHandleToolExecution(unittest.TestCase):
         result = generator.generate_response(
             query="test",
             tools=[{"name": "search_course_content"}],
-            tool_manager=mock_tool_manager
+            tool_manager=mock_tool_manager,
         )
 
         # Assert
@@ -331,7 +342,7 @@ class TestAIGeneratorHandleToolExecution(unittest.TestCase):
 class TestAIGeneratorWithNoToolManager(unittest.TestCase):
     """Tests for edge cases when tool_manager is not provided"""
 
-    @patch('ai_generator.anthropic.Anthropic')
+    @patch("ai_generator.anthropic.Anthropic")
     def test_tool_use_without_manager_returns_text(self, mock_anthropic_class):
         """When tool_use but no tool_manager, should still return content text"""
         # Arrange
@@ -353,7 +364,7 @@ class TestAIGeneratorWithNoToolManager(unittest.TestCase):
         result = generator.generate_response(
             query="test",
             tools=[{"name": "search_course_content"}],
-            tool_manager=None  # No tool manager
+            tool_manager=None,  # No tool manager
         )
 
         # Assert - Returns text content instead of executing tool
@@ -386,7 +397,7 @@ class TestAIGeneratorSequentialToolCalling(unittest.TestCase):
         response.content = [Mock(text=text)]
         return response
 
-    @patch('ai_generator.anthropic.Anthropic')
+    @patch("ai_generator.anthropic.Anthropic")
     def test_two_sequential_tool_calls(self, mock_anthropic_class):
         """Supports two sequential tool calls in separate API rounds"""
         # Arrange
@@ -412,14 +423,17 @@ class TestAIGeneratorSequentialToolCalling(unittest.TestCase):
 
         generator = AIGenerator("key", "model")
         mock_tool_manager = Mock()
-        mock_tool_manager.execute_tool.side_effect = ["Course outline", "Search results"]
+        mock_tool_manager.execute_tool.side_effect = [
+            "Course outline",
+            "Search results",
+        ]
         tools = [{"name": "get_course_outline"}, {"name": "search_course_content"}]
 
         # Act
         result = generator.generate_response(
             query="Find courses similar to MCP lesson 4",
             tools=tools,
-            tool_manager=mock_tool_manager
+            tool_manager=mock_tool_manager,
         )
 
         # Assert
@@ -427,7 +441,7 @@ class TestAIGeneratorSequentialToolCalling(unittest.TestCase):
         self.assertEqual(mock_tool_manager.execute_tool.call_count, 2)
         self.assertEqual(result, "Complete answer after 2 tools")
 
-    @patch('ai_generator.anthropic.Anthropic')
+    @patch("ai_generator.anthropic.Anthropic")
     def test_max_rounds_enforced(self, mock_anthropic_class):
         """Terminates after MAX_TOOL_ROUNDS even if Claude wants more tools"""
         # Arrange
@@ -452,14 +466,16 @@ class TestAIGeneratorSequentialToolCalling(unittest.TestCase):
         tools = [{"name": "tool_a"}, {"name": "tool_b"}, {"name": "tool_c"}]
 
         # Act
-        generator.generate_response(query="test", tools=tools, tool_manager=mock_tool_manager)
+        generator.generate_response(
+            query="test", tools=tools, tool_manager=mock_tool_manager
+        )
 
         # Assert - Only 2 tool executions (MAX_TOOL_ROUNDS = 2)
         self.assertEqual(mock_tool_manager.execute_tool.call_count, 2)
         # 3 API calls: initial + round 1 + round 2
         self.assertEqual(mock_client.messages.create.call_count, 3)
 
-    @patch('ai_generator.anthropic.Anthropic')
+    @patch("ai_generator.anthropic.Anthropic")
     def test_tools_included_in_second_api_call(self, mock_anthropic_class):
         """Tools parameter is included in second API call for potential follow-up"""
         # Arrange
@@ -478,14 +494,16 @@ class TestAIGeneratorSequentialToolCalling(unittest.TestCase):
         tools = [{"name": "search"}]
 
         # Act
-        generator.generate_response(query="test", tools=tools, tool_manager=mock_tool_manager)
+        generator.generate_response(
+            query="test", tools=tools, tool_manager=mock_tool_manager
+        )
 
         # Assert - Second call should have tools
         second_call_kwargs = mock_client.messages.create.call_args_list[1][1]
         self.assertIn("tools", second_call_kwargs)
         self.assertEqual(second_call_kwargs["tools"], tools)
 
-    @patch('ai_generator.anthropic.Anthropic')
+    @patch("ai_generator.anthropic.Anthropic")
     def test_tools_excluded_after_max_rounds(self, mock_anthropic_class):
         """Tools parameter is excluded in final call after max rounds reached"""
         # Arrange
@@ -507,13 +525,15 @@ class TestAIGeneratorSequentialToolCalling(unittest.TestCase):
         tools = [{"name": "tool_a"}, {"name": "tool_b"}]
 
         # Act
-        generator.generate_response(query="test", tools=tools, tool_manager=mock_tool_manager)
+        generator.generate_response(
+            query="test", tools=tools, tool_manager=mock_tool_manager
+        )
 
         # Assert - Third call (after max rounds) should NOT have tools
         third_call_kwargs = mock_client.messages.create.call_args_list[2][1]
         self.assertNotIn("tools", third_call_kwargs)
 
-    @patch('ai_generator.anthropic.Anthropic')
+    @patch("ai_generator.anthropic.Anthropic")
     def test_early_termination_on_text_response(self, mock_anthropic_class):
         """Terminates early when Claude returns text without tool_use"""
         # Arrange
@@ -532,14 +552,16 @@ class TestAIGeneratorSequentialToolCalling(unittest.TestCase):
         tools = [{"name": "search"}]
 
         # Act
-        result = generator.generate_response(query="test", tools=tools, tool_manager=mock_tool_manager)
+        result = generator.generate_response(
+            query="test", tools=tools, tool_manager=mock_tool_manager
+        )
 
         # Assert - Only 2 API calls (early termination)
         self.assertEqual(mock_client.messages.create.call_count, 2)
         self.assertEqual(mock_tool_manager.execute_tool.call_count, 1)
         self.assertEqual(result, "Got enough info, here's the answer")
 
-    @patch('ai_generator.anthropic.Anthropic')
+    @patch("ai_generator.anthropic.Anthropic")
     def test_message_accumulation_across_rounds(self, mock_anthropic_class):
         """Messages accumulate correctly across multiple tool rounds"""
         # Arrange
@@ -561,7 +583,9 @@ class TestAIGeneratorSequentialToolCalling(unittest.TestCase):
         tools = [{"name": "tool_a"}, {"name": "tool_b"}]
 
         # Act
-        generator.generate_response(query="test", tools=tools, tool_manager=mock_tool_manager)
+        generator.generate_response(
+            query="test", tools=tools, tool_manager=mock_tool_manager
+        )
 
         # Assert - Third call should have accumulated messages from both rounds
         third_call_kwargs = mock_client.messages.create.call_args_list[2][1]
@@ -575,7 +599,7 @@ class TestAIGeneratorSequentialToolCalling(unittest.TestCase):
         self.assertEqual(messages[3]["role"], "assistant")
         self.assertEqual(messages[4]["role"], "user")
 
-    @patch('ai_generator.anthropic.Anthropic')
+    @patch("ai_generator.anthropic.Anthropic")
     def test_tool_error_handled_gracefully(self, mock_anthropic_class):
         """Tool execution errors are captured and included in results"""
         # Arrange
@@ -594,7 +618,9 @@ class TestAIGeneratorSequentialToolCalling(unittest.TestCase):
         tools = [{"name": "failing_tool"}]
 
         # Act
-        result = generator.generate_response(query="test", tools=tools, tool_manager=mock_tool_manager)
+        result = generator.generate_response(
+            query="test", tools=tools, tool_manager=mock_tool_manager
+        )
 
         # Assert - Should not raise, returns response
         self.assertEqual(result, "Handled the error gracefully")

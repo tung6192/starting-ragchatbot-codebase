@@ -12,15 +12,23 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 class TestRAGSystemQuery(unittest.TestCase):
     """Tests for RAGSystem.query() method"""
 
-    @patch('rag_system.DocumentProcessor')
-    @patch('rag_system.VectorStore')
-    @patch('rag_system.AIGenerator')
-    @patch('rag_system.SessionManager')
-    @patch('rag_system.ToolManager')
-    @patch('rag_system.CourseSearchTool')
-    @patch('rag_system.CourseOutlineTool')
-    def setUp(self, mock_outline_tool, mock_search_tool, mock_tool_manager_class,
-              mock_session_manager, mock_ai_generator, mock_vector_store, mock_doc_processor):
+    @patch("rag_system.DocumentProcessor")
+    @patch("rag_system.VectorStore")
+    @patch("rag_system.AIGenerator")
+    @patch("rag_system.SessionManager")
+    @patch("rag_system.ToolManager")
+    @patch("rag_system.CourseSearchTool")
+    @patch("rag_system.CourseOutlineTool")
+    def setUp(
+        self,
+        mock_outline_tool,
+        mock_search_tool,
+        mock_tool_manager_class,
+        mock_session_manager,
+        mock_ai_generator,
+        mock_vector_store,
+        mock_doc_processor,
+    ):
         """Set up test fixtures with mocked dependencies"""
         # Store mock classes for later use
         self.mock_doc_processor = mock_doc_processor
@@ -52,7 +60,7 @@ class TestRAGSystemQuery(unittest.TestCase):
         self.mock_session_manager.get_conversation_history.return_value = None
         self.mock_tool_manager.get_tool_definitions.return_value = [
             {"name": "search_course_content"},
-            {"name": "get_course_outline"}
+            {"name": "get_course_outline"},
         ]
         self.mock_tool_manager.get_last_sources.return_value = []
 
@@ -69,6 +77,7 @@ class TestRAGSystemQuery(unittest.TestCase):
 
         # Import and instantiate RAGSystem
         from rag_system import RAGSystem
+
         self.rag_system = RAGSystem(self.mock_config)
 
     def test_passes_tools_to_ai_generator(self):
@@ -94,15 +103,21 @@ class TestRAGSystemQuery(unittest.TestCase):
     def test_retrieves_conversation_history(self):
         """Session history should be fetched when session_id provided"""
         # Arrange
-        self.mock_session_manager.get_conversation_history.return_value = "User: Hi\nAssistant: Hello"
+        self.mock_session_manager.get_conversation_history.return_value = (
+            "User: Hi\nAssistant: Hello"
+        )
 
         # Act
         self.rag_system.query("test query", session_id="session_1")
 
         # Assert
-        self.mock_session_manager.get_conversation_history.assert_called_with("session_1")
+        self.mock_session_manager.get_conversation_history.assert_called_with(
+            "session_1"
+        )
         call_kwargs = self.mock_ai_generator.generate_response.call_args[1]
-        self.assertEqual(call_kwargs["conversation_history"], "User: Hi\nAssistant: Hello")
+        self.assertEqual(
+            call_kwargs["conversation_history"], "User: Hi\nAssistant: Hello"
+        )
 
     def test_returns_response_and_sources(self):
         """Returns tuple of (response, sources)"""
@@ -144,15 +159,23 @@ class TestRAGSystemQuery(unittest.TestCase):
 class TestRAGSystemErrorPropagation(unittest.TestCase):
     """Tests for error handling in RAGSystem"""
 
-    @patch('rag_system.DocumentProcessor')
-    @patch('rag_system.VectorStore')
-    @patch('rag_system.AIGenerator')
-    @patch('rag_system.SessionManager')
-    @patch('rag_system.ToolManager')
-    @patch('rag_system.CourseSearchTool')
-    @patch('rag_system.CourseOutlineTool')
-    def setUp(self, mock_outline_tool, mock_search_tool, mock_tool_manager_class,
-              mock_session_manager, mock_ai_generator, mock_vector_store, mock_doc_processor):
+    @patch("rag_system.DocumentProcessor")
+    @patch("rag_system.VectorStore")
+    @patch("rag_system.AIGenerator")
+    @patch("rag_system.SessionManager")
+    @patch("rag_system.ToolManager")
+    @patch("rag_system.CourseSearchTool")
+    @patch("rag_system.CourseOutlineTool")
+    def setUp(
+        self,
+        mock_outline_tool,
+        mock_search_tool,
+        mock_tool_manager_class,
+        mock_session_manager,
+        mock_ai_generator,
+        mock_vector_store,
+        mock_doc_processor,
+    ):
         """Set up test fixtures"""
         # Create mock instances
         self.mock_vector_store = Mock()
@@ -183,12 +206,15 @@ class TestRAGSystemErrorPropagation(unittest.TestCase):
         self.mock_config.MAX_HISTORY = 2
 
         from rag_system import RAGSystem
+
         self.rag_system = RAGSystem(self.mock_config)
 
     def test_vector_store_error_propagates(self):
         """Error from vector store flows through tool to response"""
         # Arrange - AI generator returns error message that came from tool
-        self.mock_ai_generator.generate_response.return_value = "Search error: connection failed"
+        self.mock_ai_generator.generate_response.return_value = (
+            "Search error: connection failed"
+        )
 
         # Act
         response, sources = self.rag_system.query("test query")
@@ -211,12 +237,17 @@ class TestRAGSystemErrorPropagation(unittest.TestCase):
 class TestRAGSystemIntegration(unittest.TestCase):
     """Integration tests for complete query flow"""
 
-    @patch('rag_system.DocumentProcessor')
-    @patch('rag_system.VectorStore')
-    @patch('rag_system.AIGenerator')
-    @patch('rag_system.SessionManager')
-    def test_query_without_session(self, mock_session_manager, mock_ai_generator,
-                                   mock_vector_store, mock_doc_processor):
+    @patch("rag_system.DocumentProcessor")
+    @patch("rag_system.VectorStore")
+    @patch("rag_system.AIGenerator")
+    @patch("rag_system.SessionManager")
+    def test_query_without_session(
+        self,
+        mock_session_manager,
+        mock_ai_generator,
+        mock_vector_store,
+        mock_doc_processor,
+    ):
         """Query works correctly without a session ID"""
         # Arrange
         mock_ai = Mock()
@@ -238,6 +269,7 @@ class TestRAGSystemIntegration(unittest.TestCase):
         mock_config.MAX_HISTORY = 2
 
         from rag_system import RAGSystem
+
         rag = RAGSystem(mock_config)
 
         # Act
@@ -247,12 +279,17 @@ class TestRAGSystemIntegration(unittest.TestCase):
         self.assertEqual(response, "Response without session")
         mock_session.add_exchange.assert_not_called()
 
-    @patch('rag_system.DocumentProcessor')
-    @patch('rag_system.VectorStore')
-    @patch('rag_system.AIGenerator')
-    @patch('rag_system.SessionManager')
-    def test_query_builds_correct_prompt(self, mock_session_manager, mock_ai_generator,
-                                         mock_vector_store, mock_doc_processor):
+    @patch("rag_system.DocumentProcessor")
+    @patch("rag_system.VectorStore")
+    @patch("rag_system.AIGenerator")
+    @patch("rag_system.SessionManager")
+    def test_query_builds_correct_prompt(
+        self,
+        mock_session_manager,
+        mock_ai_generator,
+        mock_vector_store,
+        mock_doc_processor,
+    ):
         """Query wraps user query in expected prompt format"""
         # Arrange
         mock_ai = Mock()
@@ -274,6 +311,7 @@ class TestRAGSystemIntegration(unittest.TestCase):
         mock_config.MAX_HISTORY = 2
 
         from rag_system import RAGSystem
+
         rag = RAGSystem(mock_config)
 
         # Act

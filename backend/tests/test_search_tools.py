@@ -30,16 +30,12 @@ class TestCourseSearchToolExecute(unittest.TestCase):
 
         # Act
         self.search_tool.execute(
-            query="test query",
-            course_name="Test Course",
-            lesson_number=3
+            query="test query", course_name="Test Course", lesson_number=3
         )
 
         # Assert
         self.mock_vector_store.search.assert_called_once_with(
-            query="test query",
-            course_name="Test Course",
-            lesson_number=3
+            query="test query", course_name="Test Course", lesson_number=3
         )
 
     def test_execute_returns_error_from_search_results(self):
@@ -103,7 +99,7 @@ class TestCourseSearchToolExecute(unittest.TestCase):
         self.mock_vector_store.search.return_value = SearchResults(
             documents=["Content about Python basics"],
             metadata=[{"course_title": "Python Course", "lesson_number": 1}],
-            distances=[0.3]
+            distances=[0.3],
         )
         self.mock_vector_store.get_lesson_link.return_value = None
 
@@ -120,9 +116,11 @@ class TestCourseSearchToolExecute(unittest.TestCase):
         self.mock_vector_store.search.return_value = SearchResults(
             documents=["Content"],
             metadata=[{"course_title": "Test Course", "lesson_number": 2}],
-            distances=[0.2]
+            distances=[0.2],
         )
-        self.mock_vector_store.get_lesson_link.return_value = "https://example.com/lesson2"
+        self.mock_vector_store.get_lesson_link.return_value = (
+            "https://example.com/lesson2"
+        )
 
         # Act
         self.search_tool.execute(query="test")
@@ -138,9 +136,9 @@ class TestCourseSearchToolExecute(unittest.TestCase):
             documents=["Content 1", "Content 2"],
             metadata=[
                 {"course_title": "Same Course", "lesson_number": 1},
-                {"course_title": "Same Course", "lesson_number": 1}  # Duplicate
+                {"course_title": "Same Course", "lesson_number": 1},  # Duplicate
             ],
-            distances=[0.2, 0.3]
+            distances=[0.2, 0.3],
         )
         self.mock_vector_store.get_lesson_link.return_value = None
 
@@ -162,7 +160,7 @@ class TestToolManager(unittest.TestCase):
         self.mock_tool = Mock(spec=Tool)
         self.mock_tool.get_tool_definition.return_value = {
             "name": "test_tool",
-            "description": "A test tool"
+            "description": "A test tool",
         }
         self.mock_tool.execute.return_value = "Tool executed successfully"
         self.mock_tool.last_sources = ["source1", "source2"]

@@ -1,6 +1,7 @@
 import anthropic
 from typing import List, Optional, Dict, Any
 
+
 class AIGenerator:
     """Handles interactions with Anthropic's Claude API for generating responses"""
 
@@ -49,57 +50,56 @@ All responses must be:
 4. **Example-supported** - Include relevant examples when they aid understanding
 Provide only the direct answer to what was asked.
 """
-    
+
     def __init__(self, api_key: str, model: str):
         self.client = anthropic.Anthropic(api_key=api_key)
         self.model = model
-        
+
         # Pre-build base API parameters
-        self.base_params = {
-            "model": self.model,
-            "temperature": 0,
-            "max_tokens": 800
-        }
-    
-    def generate_response(self, query: str,
-                         conversation_history: Optional[str] = None,
-                         tools: Optional[List] = None,
-                         tool_manager=None) -> str:
+        self.base_params = {"model": self.model, "temperature": 0, "max_tokens": 800}
+
+    def generate_response(
+        self,
+        query: str,
+        conversation_history: Optional[str] = None,
+        tools: Optional[List] = None,
+        tool_manager=None,
+    ) -> str:
         """
         Generate AI response with optional tool usage and conversation context.
-        
+
         Args:
             query: The user's question or request
             conversation_history: Previous messages for context
             tools: Available tools the AI can use
             tool_manager: Manager to execute tools
-            
+
         Returns:
             Generated response as string
         """
-        
+
         # Build system content efficiently - avoid string ops when possible
         system_content = (
             f"{self.SYSTEM_PROMPT}\n\nPrevious conversation:\n{conversation_history}"
-            if conversation_history 
+            if conversation_history
             else self.SYSTEM_PROMPT
         )
-        
+
         # Prepare API call parameters efficiently
         api_params = {
             **self.base_params,
             "messages": [{"role": "user", "content": query}],
-            "system": system_content
+            "system": system_content,
         }
-        
+
         # Add tools if available
         if tools:
             api_params["tools"] = tools
             api_params["tool_choice"] = {"type": "auto"}
-        
+
         # Get response from Claude
         response = self.client.messages.create(**api_params)
-        
+
         # Handle tool execution if needed
         if response.stop_reason == "tool_use" and tool_manager:
             return self._handle_tool_execution(
@@ -108,15 +108,21 @@ Provide only the direct answer to what was asked.
                 system=api_params["system"],
                 tools=tools,
                 tool_manager=tool_manager,
-                current_round=1
+                current_round=1,
             )
-        
+
         # Return direct response
         return response.content[0].text
-    
-    def _handle_tool_execution(self, response, messages: List,
-                               system: str, tools: Optional[List],
-                               tool_manager, current_round: int = 1) -> str:
+
+    def _handle_tool_execution(
+        self,
+        response,
+        messages: List,
+        system: str,
+        tools: Optional[List],
+        tool_manager,
+        current_round: int = 1,
+    ) -> str:
         """
         Handle execution of tool calls with support for sequential rounds.
 
@@ -143,17 +149,18 @@ Provide only the direct answer to what was asked.
             if content_block.type == "tool_use":
                 try:
                     tool_result = tool_manager.execute_tool(
-                        content_block.name,
-                        **content_block.input
+                        content_block.name, **content_block.input
                     )
                 except Exception as e:
                     tool_result = f"Error executing tool: {str(e)}"
 
-                tool_results.append({
-                    "type": "tool_result",
-                    "tool_use_id": content_block.id,
-                    "content": tool_result
-                })
+                tool_results.append(
+                    {
+                        "type": "tool_result",
+                        "tool_use_id": content_block.id,
+                        "content": tool_result,
+                    }
+                )
 
         # Add tool results as single message
         if tool_results:
@@ -163,11 +170,7 @@ Provide only the direct answer to what was asked.
         include_tools = current_round < self.MAX_TOOL_ROUNDS
 
         # Prepare API call parameters
-        api_params = {
-            **self.base_params,
-            "messages": messages,
-            "system": system
-        }
+        api_params = {**self.base_params, "messages": messages, "system": system}
 
         # Include tools if more rounds are allowed
         if include_tools and tools:
@@ -178,14 +181,17 @@ Provide only the direct answer to what was asked.
         next_response = self.client.messages.create(**api_params)
 
         # Check if another tool round is needed and allowed
-        if next_response.stop_reason == "tool_use" and current_round < self.MAX_TOOL_ROUNDS:
+        if (
+            next_response.stop_reason == "tool_use"
+            and current_round < self.MAX_TOOL_ROUNDS
+        ):
             return self._handle_tool_execution(
                 response=next_response,
                 messages=messages,
                 system=system,
                 tools=tools,
                 tool_manager=tool_manager,
-                current_round=current_round + 1
+                current_round=current_round + 1,
             )
 
         return next_response.content[0].text

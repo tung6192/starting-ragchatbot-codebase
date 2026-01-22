@@ -12,8 +12,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 class TestVectorStoreMaxResults(unittest.TestCase):
     """Tests for VectorStore max_results configuration"""
 
-    @patch('vector_store.chromadb')
-    @patch('vector_store.SentenceTransformer')
+    @patch("vector_store.chromadb")
+    @patch("vector_store.SentenceTransformer")
     def test_max_results_stored_correctly(self, mock_transformer, mock_chromadb):
         """VectorStore stores max_results parameter"""
         from vector_store import VectorStore
@@ -24,8 +24,8 @@ class TestVectorStoreMaxResults(unittest.TestCase):
         # Assert
         self.assertEqual(store.max_results, 5)
 
-    @patch('vector_store.chromadb')
-    @patch('vector_store.SentenceTransformer')
+    @patch("vector_store.chromadb")
+    @patch("vector_store.SentenceTransformer")
     def test_max_results_zero_is_invalid(self, mock_transformer, mock_chromadb):
         """MAX_RESULTS of 0 would return no results - this catches the config bug"""
         from vector_store import VectorStore
@@ -37,8 +37,8 @@ class TestVectorStoreMaxResults(unittest.TestCase):
         self.assertEqual(store.max_results, 0)
         # This test documents the bug: when max_results=0, no results are returned
 
-    @patch('vector_store.chromadb')
-    @patch('vector_store.SentenceTransformer')
+    @patch("vector_store.chromadb")
+    @patch("vector_store.SentenceTransformer")
     def test_search_uses_max_results(self, mock_transformer, mock_chromadb):
         """Search method uses max_results when limit not specified"""
         from vector_store import VectorStore
@@ -49,9 +49,9 @@ class TestVectorStoreMaxResults(unittest.TestCase):
 
         mock_collection = Mock()
         mock_collection.query.return_value = {
-            'documents': [[]],
-            'metadatas': [[]],
-            'distances': [[]]
+            "documents": [[]],
+            "metadatas": [[]],
+            "distances": [[]],
         }
         mock_client.get_or_create_collection.return_value = mock_collection
 
@@ -62,11 +62,13 @@ class TestVectorStoreMaxResults(unittest.TestCase):
 
         # Assert - should use max_results (5) as n_results
         call_kwargs = mock_collection.query.call_args[1]
-        self.assertEqual(call_kwargs['n_results'], 5)
+        self.assertEqual(call_kwargs["n_results"], 5)
 
-    @patch('vector_store.chromadb')
-    @patch('vector_store.SentenceTransformer')
-    def test_search_with_zero_max_results_returns_nothing(self, mock_transformer, mock_chromadb):
+    @patch("vector_store.chromadb")
+    @patch("vector_store.SentenceTransformer")
+    def test_search_with_zero_max_results_returns_nothing(
+        self, mock_transformer, mock_chromadb
+    ):
         """When max_results=0, search returns empty results"""
         from vector_store import VectorStore
 
@@ -76,9 +78,9 @@ class TestVectorStoreMaxResults(unittest.TestCase):
 
         mock_collection = Mock()
         mock_collection.query.return_value = {
-            'documents': [[]],
-            'metadatas': [[]],
-            'distances': [[]]
+            "documents": [[]],
+            "metadatas": [[]],
+            "distances": [[]],
         }
         mock_client.get_or_create_collection.return_value = mock_collection
 
@@ -89,7 +91,7 @@ class TestVectorStoreMaxResults(unittest.TestCase):
 
         # Assert - n_results=0 means no results returned!
         call_kwargs = mock_collection.query.call_args[1]
-        self.assertEqual(call_kwargs['n_results'], 0)  # This is the bug!
+        self.assertEqual(call_kwargs["n_results"], 0)  # This is the bug!
 
 
 class TestConfigMaxResults(unittest.TestCase):
@@ -104,17 +106,20 @@ class TestConfigMaxResults(unittest.TestCase):
         # This test FAILS with current config (MAX_RESULTS=0)
         # It documents the bug that needs fixing
         self.assertGreater(
-            config.MAX_RESULTS, 0,
-            f"MAX_RESULTS is {config.MAX_RESULTS}, but must be > 0 for search to return results!"
+            config.MAX_RESULTS,
+            0,
+            f"MAX_RESULTS is {config.MAX_RESULTS}, but must be > 0 for search to return results!",
         )
 
 
 class TestVectorStoreSearch(unittest.TestCase):
     """Tests for VectorStore.search() method"""
 
-    @patch('vector_store.chromadb')
-    @patch('vector_store.SentenceTransformer')
-    def test_search_with_explicit_limit_overrides_max_results(self, mock_transformer, mock_chromadb):
+    @patch("vector_store.chromadb")
+    @patch("vector_store.SentenceTransformer")
+    def test_search_with_explicit_limit_overrides_max_results(
+        self, mock_transformer, mock_chromadb
+    ):
         """Explicit limit parameter overrides max_results"""
         from vector_store import VectorStore
 
@@ -124,9 +129,9 @@ class TestVectorStoreSearch(unittest.TestCase):
 
         mock_collection = Mock()
         mock_collection.query.return_value = {
-            'documents': [[]],
-            'metadatas': [[]],
-            'distances': [[]]
+            "documents": [[]],
+            "metadatas": [[]],
+            "distances": [[]],
         }
         mock_client.get_or_create_collection.return_value = mock_collection
 
@@ -137,7 +142,7 @@ class TestVectorStoreSearch(unittest.TestCase):
 
         # Assert - should use limit (10), not max_results (5)
         call_kwargs = mock_collection.query.call_args[1]
-        self.assertEqual(call_kwargs['n_results'], 10)
+        self.assertEqual(call_kwargs["n_results"], 10)
 
 
 if __name__ == "__main__":
